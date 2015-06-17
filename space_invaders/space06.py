@@ -1,6 +1,7 @@
 import pygame
 import os
 from pygame.locals import *
+import random
 
 
 # Special code to center window
@@ -52,6 +53,7 @@ class Enemy(object):
         self.direction = 'RIGHT'
         self.ticks = 60
         self.is_dead = False
+        self.bullet_ticks = random.randrange(100, 200)
 
     def draw(self, screen):
         rect = pygame.Rect(self.pos, self.size)
@@ -70,8 +72,16 @@ class Enemy(object):
         self.pos = x, y
         self.ticks -= 1
 
+        if self.bullet_ticks == 0:
+            self.bullet_ticks = random.randrange(100, 200)
+            x, y = self.pos
+            y += self.size_h + 1
+            bullet = Bullet((x, y), 'DOWN')
+            world.objects.append(bullet)
+        self.bullet_ticks -= 1
+
         for obj in world.objects:
-            if isinstance(obj, Bullet) and (not obj.is_dead) and obj.collide(self):
+            if isinstance(obj, Bullet) and (not obj.is_dead) and obj.collide(self) and obj.direction == 'UP':
                 self.is_dead = True
                 obj.is_dead = True
 
@@ -112,6 +122,11 @@ class Player(object):
             self.bullet_tick_counter = 0
             self.can_shoot = True
         self.bullet_tick_counter += 1
+
+        for obj in world.objects:
+            if isinstance(obj, Bullet) and (not obj.is_dead) and obj.collide(self) and obj.direction == 'DOWN':
+                self.is_dead = True
+                obj.is_dead = True
 
 
 class World(object):
